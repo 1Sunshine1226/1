@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <!-- 关键：适配微信手机端屏幕 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>温馨提示</title>
+    <style>
+        /* 页面基础样式 */
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow: hidden; /* 防止页面滚动 */
+            font-family: "Microsoft YaHei", sans-serif; /* 对应原微软雅黑 */
+        }
+
+        /* 提示弹窗样式 */
+        .tip-window {
+            position: absolute; /* 绝对定位实现自由漂浮 */
+            width: 280px;
+            height: 60px;
+            border-radius: 8px; /* 圆角更美观 */
+            padding: 5px;
+            box-sizing: border-box;
+            z-index: 9999; /* 置顶显示 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: default;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15); /* 阴影增加立体感 */
+        }
+
+        .tip-text {
+            font-size: 14px;
+            color: #333;
+            text-align: center;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 关闭后的提示 */
+        .end-tip {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            color: #666;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="end-tip">所有提示已关闭 ✨</div>
+
+    <script>
+        // 配置项（对应原Python变量）
+        const config = {
+            totalWindows: 100,        // 总弹窗数
+            createInterval: 50,       // 弹窗创建间隔（毫秒）
+            autoCloseTime: 30 * 1000, // 自动关闭时间（毫秒）
+            // 提示语列表
+            tips: [
+                '多喝热水哦~', '保持微笑吖', '每天都要元气满满',
+                '记得多吃水果', '保持好心情', '好好爱自己', '我想你了',
+                '梦想成真', '我们终会相遇', '万事如意',
+                '顺顺利利的', '早点休息', '愿所有的烦恼都消失',
+                '别熬夜', '每天都开开心心的', '天冷记得添衣',
+                '我一直都在','记得念想我','喜欢你没理由'
+            ],
+            // 背景色列表（对应原Python的bg_colors）
+            bgColors: [
+                'lightpink', 'skyblue', 'lightgreen', 'lavender',
+                'lightyellow', 'plum', 'coral', 'bisque', 'aquamarine',
+                'mistyrose', 'honeydew', 'lavenderblush', 'oldlace'
+            ]
+        };
+
+        // 全局状态
+        let shouldClose = false;
+        const allWindows = []; // 存储所有弹窗DOM元素
+
+        // 1. 创建单个提示弹窗
+        function createTipWindow() {
+            if (shouldClose) return;
+
+            // 创建弹窗DOM元素
+            const windowEl = document.createElement('div');
+            windowEl.className = 'tip-window';
+            const textEl = document.createElement('div');
+            textEl.className = 'tip-text';
+
+            // 随机选提示语和背景色
+            const randomTip = config.tips[Math.floor(Math.random() * config.tips.length)];
+            const randomBg = config.bgColors[Math.floor(Math.random() * config.bgColors.length)];
+            
+            textEl.textContent = randomTip;
+            windowEl.style.backgroundColor = randomBg;
+
+            // 计算随机位置（确保弹窗完全在屏幕内）
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            const windowWidth = 280;
+            const windowHeight = 60;
+            const randomX = Math.floor(Math.random() * (screenWidth - windowWidth));
+            const randomY = Math.floor(Math.random() * (screenHeight - windowHeight));
+            
+            windowEl.style.left = `${randomX}px`;
+            windowEl.style.top = `${randomY}px`;
+
+            // 组装弹窗并添加到页面
+            windowEl.appendChild(textEl);
+            document.body.appendChild(windowEl);
+            allWindows.push(windowEl);
+        }
+
+        // 2. 关闭所有弹窗
+        function closeAllWindows() {
+            shouldClose = true;
+            // 逐个移除弹窗
+            allWindows.forEach(el => {
+                try {
+                    el.remove();
+                } catch (e) {}
+            });
+            allWindows.length = 0;
+            // 显示结束提示
+            document.querySelector('.end-tip').style.display = 'block';
+        }
+
+        // 3. 分批创建弹窗（替代原create_windows_batch）
+        function createWindowsBatch() {
+            let count = 0;
+            const createTimer = setInterval(() => {
+                if (shouldClose || count >= config.totalWindows) {
+                    clearInterval(createTimer);
+                    return;
+                }
+                createTipWindow();
+                count++;
+            }, config.createInterval);
+        }
+
+        // 4. 绑定空格键关闭事件
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') { // 按空格键触发
+                closeAllWindows();
+            }
+        });
+
+        // 5. 自动关闭计时器（替代原auto_close_timer）
+        setTimeout(() => {
+            closeAllWindows();
+        }, config.autoCloseTime);
+
+        // 启动！
+        createWindowsBatch();
+    </script>
+</body>
+</html>
